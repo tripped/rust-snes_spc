@@ -1,0 +1,4 @@
+[package]
+name = "snes_spc"
+version = "0.1.0"
+authors = ["Trip Volpe <trip.volpe@gmail.com>"]
