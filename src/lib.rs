@@ -29,6 +29,8 @@ pub struct SnesSpc {
     handle: *mut SpcHandle
 }
 
+unsafe impl Send for SnesSpc {}
+
 impl SnesSpc {
     pub fn new() -> SnesSpc {
         unsafe {
