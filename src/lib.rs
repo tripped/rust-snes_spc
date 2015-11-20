@@ -167,6 +167,14 @@ impl SnesSpc {
     }
 }
 
+impl Drop for SnesSpc {
+    fn drop(&mut self) {
+        unsafe {
+            spc_delete(self.handle);
+        }
+    }
+}
+
 #[test]
 fn can_call_unsafe_api_without_exploding() {
     unsafe {
