@@ -178,7 +178,7 @@ impl Drop for SnesSpc {
 #[test]
 fn can_call_unsafe_api_without_exploding() {
     unsafe {
-        let mut spc = spc_new();
+        let spc = spc_new();
         spc_delete(spc);
     }
 }
