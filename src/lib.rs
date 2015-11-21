@@ -12,13 +12,16 @@ use std::result;
 
 use libc::{c_char, c_short, c_int};
 
-/// The error type for SPC operations; either an io::Error, or an error
-/// originating within the underlying snes_spc library. The latter case
-/// is just exposed as a string containing the error message.
+/// The error type for SPC operations. Most of the wrapped C `snes_spc`
+/// functions have the possibility of returning an error string from the
+/// underlying library; in those cases the returned error is just an
+/// uninterpreted copy of that string. Other members of the enumeration
+/// represent errors arising from the wrapper functions themselves.
 #[derive(Debug)]
 pub enum SpcError {
+    Internal(String),
     Io(io::Error),
-    Internal(String)
+    OddSizeBuffer,
 }
 
 impl fmt::Display for SpcError {
@@ -26,6 +29,7 @@ impl fmt::Display for SpcError {
         match *self {
             SpcError::Io(ref e) => write!(f, "IO error: {}", e),
             SpcError::Internal(ref e) => write!(f, "Internal SPC error: {}", e),
+            SpcError::OddSizeBuffer => write!(f, "SPC error: {}", self)
         }
     }
 }
@@ -33,15 +37,17 @@ impl fmt::Display for SpcError {
 impl error::Error for SpcError {
     fn description(&self) -> &str {
         match *self {
-            SpcError::Io(ref e) => e.description(),
             SpcError::Internal(ref e) => &e,
+            SpcError::Io(ref e) => e.description(),
+            SpcError::OddSizeBuffer => "sample buffer size not multiple of two",
         }
     }
 
     fn cause(&self) -> Option<&error::Error> {
         match *self {
+            SpcError::Internal(_) => None,
             SpcError::Io(ref e) => Some(e),
-            SpcError::Internal(_) => None
+            SpcError::OddSizeBuffer => None,
         }
     }
 }
@@ -158,11 +164,17 @@ impl SnesSpc {
         }
     }
 
-    /// Emulate a specified number of samples, storing them in a given buffer.
-    pub fn play(&mut self, count: u32, out: &mut [i16]) -> Result<()> {
+    /// Emulate samples into the specified buffer. The number of samples
+    /// emulated will be equal to the size of the buffer, which must be a
+    /// multiple of two (to accommodate stereo channels).
+    pub fn play(&mut self, out: &mut [i16]) -> Result<()> {
         unsafe {
-            // TODO: check that out is big enough :)
-            result_from(spc_play(self.handle, count as c_int, out.as_mut_ptr()))
+            let len = out.len() as c_int;
+            if len % 2 != 0 {
+                Err(SpcError::OddSizeBuffer)
+            } else {
+                result_from(spc_play(self.handle, len, out.as_mut_ptr()))
+            }
         }
     }
 }
@@ -188,4 +200,22 @@ fn can_use_safe_wrapper_without_being_stabbed() {
     let mut spc = SnesSpc::new();
     spc.clear_echo();
     // Drop it!
+}
+
+#[test]
+fn from_file_with_bad_path_produces_io_error() {
+    match SnesSpc::from_file("") {
+        Err(SpcError::Io(_)) => {},
+        _ => { panic!("Expected io::Error!") }
+    }
+}
+
+#[test]
+fn odd_size_buffer_produces_playback_error() {
+    let mut spc = SnesSpc::new();
+    let mut buf = vec![0;101];
+    match spc.play(&mut buf) {
+        Err(SpcError::OddSizeBuffer) => {},
+        _ => { panic!("Expected OddSizeBuffer error!") }
+    }
 }
