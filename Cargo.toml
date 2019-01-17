@@ -8,5 +8,8 @@ edition = "2018"
 [build-dependencies]
 cc = "*"
 
+[dev-dependencies]
+sdl2 = "*"
+
 [dependencies]
 libc = "*"
