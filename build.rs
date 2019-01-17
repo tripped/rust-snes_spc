@@ -1,7 +1,7 @@
-extern crate gcc;
+extern crate cc;
 
 fn main() {
-    gcc::Config::new()
+    cc::Build::new()
         // Compilation options
         .flag("-fPIC")
         .flag("-fno-rtti")
