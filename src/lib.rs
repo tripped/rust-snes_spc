@@ -120,7 +120,7 @@ pub struct SnesSpc {
 }
 
 /// SnesSpc's internal handle is never exposed except through its safe
-/// implementation, so it should be save to move to another thread.
+/// implementation, so it should be safe to move to another thread.
 unsafe impl Send for SnesSpc {}
 
 impl SnesSpc {
