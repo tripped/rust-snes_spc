@@ -135,7 +135,7 @@ impl SnesSpc {
     /// Creates a new `SnesSpc` using a byte slice as its initial SPC data.
     pub fn from_data(data: &[u8]) -> Result<SnesSpc> {
         let mut spc = SnesSpc::new();
-        try!(spc.load_spc(data));
+        spc.load_spc(data)?;
         Ok(spc)
     }
 
@@ -143,8 +143,8 @@ impl SnesSpc {
     /// file at the given path.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<SnesSpc> {
         let mut data = Vec::new();
-        let mut file = try!(File::open(path));
-        try!(file.read_to_end(&mut data));
+        let mut file = File::open(path)?;
+        file.read_to_end(&mut data)?;
         SnesSpc::from_data(&data)
     }
 

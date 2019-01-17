@@ -3,6 +3,7 @@ name = "snes_spc"
 version = "0.1.2"
 authors = ["Trip Volpe <trip.volpe@gmail.com>"]
 build = "build.rs"
+edition = "2018"
 
 [build-dependencies]
 cc = "*"
